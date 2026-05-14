@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width,
+                   initial-scale=1.0">
+
+    <title>
+        Virtual Waiting Room Dashboard
+    </title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>
+            Virtual Waiting Room Dashboard
+        </h1>
+
+        <!-- USER INPUT SECTION -->
+
+        <div class="section">
+
+            <h2>Add Incoming User</h2>
+
+            <form id="accessForm">
+
+                <input type="text"
+                       id="user_id"
+                       placeholder="Enter User ID"
+                       required>
+
+                <button type="submit">
+                    Add User
+                </button>
+
+            </form>
+
+            <div id="responseBox"></div>
+
+        </div>
+
+        <!-- SYSTEM STATUS -->
+
+        <div class="section">
+
+            <h2>System Status</h2>
+
+            <div id="systemStatus">
+
+                Loading system status...
+
+            </div>
+
+        </div>
+
+        <!-- ACTIVE USERS -->
+
+        <div class="section">
+
+            <h2>Active Users</h2>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>User ID</th>
+                        <th>Remaining Session (in minutes)</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="activeUsersTable">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- WAITING QUEUE -->
+
+        <div class="section">
+
+            <h2>Waiting Queue</h2>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>User ID</th>
+                        <th>Queue Position</th>
+                        <th>Estimated Wait (in minutes)</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="queueTable">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        // USER SUBMISSION
+
+        const form =
+            document.getElementById(
+                "accessForm"
+            );
+
+        form.addEventListener(
+            "submit",
+            async (event) => {
+
+                event.preventDefault();
+
+                const userId =
+                    document.getElementById(
+                        "user_id"
+                    ).value;
+
+                const formData =
+                    new FormData();
+
+                formData.append(
+                    "user_id",
+                    userId
+                );
+
+                const response =
+                    await fetch(
+                        "/request-access",
+                        {
+                            method: "POST",
+                            body: formData
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                document.getElementById(
+                    "responseBox"
+                ).innerHTML = `
+                    <h3>${data.status}</h3>
+                    <p>${data.message}</p>
+                `;
+
+                // Clear input
+                document.getElementById(
+                    "user_id"
+                ).value = "";
+
+                // Refresh dashboard immediately
+                fetchDashboardData();
+            }
+        );
+        
+
+        // Convert seconds → MM:SS
+        function formatTime(seconds) {
+
+            const minutes =
+                Math.floor(seconds / 60);
+
+            const remainingSeconds =
+                seconds % 60;
+
+            return `
+                ${minutes}:
+                ${remainingSeconds
+                    .toString()
+                    .padStart(2, '0')}
+            `;
+        }
+
+        // FETCH DASHBOARD DATA
+
+        async function fetchDashboardData() {
+
+            const response =
+                await fetch(
+                    "/dashboard-data"
+                );
+
+            const data =
+                await response.json();
+
+            // SYSTEM STATUS
+
+            document.getElementById(
+                "systemStatus"
+            ).innerHTML = `
+
+                <p>
+                    Active Users:
+                    ${data.system_status.active_users}
+                </p>
+
+                <p>
+                    Queued Users:
+                    ${data.system_status.queued_users}
+                </p>
+
+                <p>
+                    Available Slots:
+                    ${data.system_status.available_slots}
+                </p>
+            `;
+
+            // ACTIVE USERS TABLE
+
+            const activeTable =
+                document.getElementById(
+                    "activeUsersTable"
+                );
+
+            activeTable.innerHTML = "";
+
+            data.active_users_data.forEach(
+                (user) => {
+
+                    activeTable.innerHTML += `
+                        <tr>
+                            <td>${user.user_id}</td>
+
+                            <td>
+                                ${formatTime(
+                                    user.remaining_session_seconds
+                                )}
+                            </td>
+                        </tr>
+                    `;
+                }
+            );
+
+            // QUEUE TABLE
+
+            const queueTable =
+                document.getElementById(
+                    "queueTable"
+                );
+
+            queueTable.innerHTML = "";
+
+            data.queued_users_data.forEach(
+                (user) => {
+
+                    queueTable.innerHTML += `
+                        <tr>
+
+                            <td>${user.user_id}</td>
+
+                            <td>
+                                ${user.queue_position}
+                            </td>
+
+                            <td>
+                                ${formatTime(
+                                    user.estimated_wait_seconds
+                                )}
+                            </td>
+
+                        </tr>
+                    `;
+                }
+            );
+        }
+
+        // Initial dashboard load
+        fetchDashboardData();
+
+        // Refresh dashboard every 5 seconds
+        setInterval(
+            fetchDashboardData,
+            5000
+        );
+
+    </script>
+
+</body>
+
+</html>
