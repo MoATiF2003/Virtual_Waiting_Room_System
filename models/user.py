@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 
 class User:
-    SESSION_DURATION = 5
     
-    def __init__(self, user_id):
+    def __init__(self, user_id, session_timeout):
         self.user_id = user_id
+        self.session_timeout = session_timeout
         self.join_time = None
         self.expiry_time = None
         self.status = 'CREATED'
@@ -13,7 +13,7 @@ class User:
         self.join_time = datetime.now()
         self.expiry_time = (
             self.join_time +
-            timedelta(minutes=self.SESSION_DURATION)
+            timedelta(minutes=self.session_timeout)
         )
         self.status = 'ACTIVE'
 

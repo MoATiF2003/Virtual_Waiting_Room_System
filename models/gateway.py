@@ -7,15 +7,16 @@ import math
 
 class Gateway:
     
-    def __init__(self, max_capacity = 10, admit_rate = 2):
+    def __init__(self, max_capacity = 10, admit_rate = 2, session_timeout = 5):
         self.max_capacity = max_capacity
         self.admit_rate = admit_rate
+        self.session_timeout = session_timeout
         self.session_manager = SessionManager(max_capacity = self.max_capacity)
         self.waiting_queue = WaitingQueue()
         self.all_users = {}
 
     def request_access(self, user_id):
-        user = User(user_id)
+        user = User(user_id = user_id, session_timeout = self.session_timeout)
         self.all_users[user_id] = user 
 
         if self.session_manager.has_capacity():

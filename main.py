@@ -14,7 +14,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="frontend")
 
 
-gateway = Gateway(max_capacity=5, admit_rate=2)
+gateway = Gateway(
+    max_capacity = 10,
+    admit_rate = 2,
+    session_timeout = 5
+)
 
 @app.on_event("startup")
 def startup_event(): # Starting VWR system
