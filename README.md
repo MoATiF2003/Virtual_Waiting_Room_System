@@ -63,8 +63,7 @@ Then open `http://127.0.0.1:8000` in your browser.
 
 ## Default configuration
 
-- `Gateway(max_capacity=5, admit_rate=2)` in `main.py`
-- `User.SESSION_DURATION = 5` minutes in `models/user.py`
+- `Gateway(max_capacity=10, admit_rate=2, session_timeout=5)` in `main.py`
 - Queue processing interval: 10 seconds
 - Dashboard refresh interval: 5 seconds
 
